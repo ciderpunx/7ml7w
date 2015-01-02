@@ -1,2 +1,5 @@
 Installing on Debian Jessie: 
 $ sudo aptitude install lua5.2
+
+Med exercise: Don't know why I'd use an if statement in this, it seems like it would be 
+creating work for no reason.

@@ -1,5 +1,13 @@
 Installing on Debian Jessie: 
 $ sudo aptitude install lua5.2
 
-Med exercise: Don't know why I'd use an if statement in this, it seems like it would be 
+d1 Med exercise: Don't know why I'd use an if statement in this, it seems like it would be 
 creating work for no reason.
+
+d2
+
+* don't like 1 indexing of arrays
+* tables are quite nice as a data structure
+* the REPL would be better with completion rlwrap doesn't add it but made history work better
+  $ sudo aptitude instal rlwrap
+* Don't like the fact that you have to define functions before you can use them (in the file)

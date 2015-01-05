@@ -11,3 +11,4 @@ d2
 * the REPL would be better with completion rlwrap doesn't add it but made history work better
   $ sudo aptitude instal rlwrap
 * Don't like the fact that you have to define functions before you can use them (in the file)
+* The metatable stuff was hard until I had an insight that the global environment was a table and threfore creating a new table was just adding an element to a table. So I could the use __newindex metatable event to override default behaviour. cf: http://lua-users.org/wiki/MetatableEvents which also gave me a clue about rawset.

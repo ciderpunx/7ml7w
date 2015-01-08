@@ -5,6 +5,15 @@ local NOTE_DOWN = 0x90
 local NOTE_UP   = 0x80
 local VELOCITY  = 0x7f
 
+local DEBUG = false    -- print what is going on verbosely
+
+-- Just a convenience - print stuff if DEBUG flag is true
+local function logg(msg) 
+  if DEBUG then
+    print(msg)
+  end
+end
+
 local function note(letter, octave)
    local notes = {
       C  = 0,      Cs = 1,      D  = 2,      Ds = 3,      E  = 4,
@@ -37,6 +46,7 @@ local function parse_note(s)
   end
 
   volume = 5;
+
   if(vol and tonumber(vol)) then
     volume = 1 + vol;
     if volume < 1 then volume = 1 end
@@ -52,10 +62,10 @@ local function parse_note(s)
 end
 
 
-local function play(note, duration, volume)
-   midi_send(volume, NOTE_DOWN, note, VELOCITY)
+local function play(note, duration, volume, channel, port)
+   midi_send(port, channel, volume, NOTE_DOWN, note, VELOCITY)
    scheduler.wait(duration)
-   midi_send(volume, NOTE_UP, note, VELOCITY)
+   midi_send(port, channel, volume, NOTE_UP, note, VELOCITY)
 end
 
 local mt = {
@@ -69,12 +79,28 @@ setmetatable(_G, mt)
 
 local function part(t)
    local function play_part()
+      local channel = 1; -- default channel
+      local port = 1; -- default port
+
+      if(t['port'] ~= nil) then
+        port = tonumber(t['port'])
+        logg("Part to be played on port: " .. port)
+      end
+
+      if(t['channel'] ~= nil) then
+        channel = tonumber(t['channel'])
+        logg("Part to be played on channel: " .. channel)
+      end
+
       for i = 1, #t do
-         print("Playing " .. t[i].letter 
+         logg("Playing " .. t[i].letter 
               .. " in octave " .. t[i].octave 
               .. " for " .. t[i].duration
-              .. ". Vol would be " .. t[i].volume)
-         play(t[i].note, t[i].duration, t[i].volume)
+              .. ". Volume: " .. t[i].volume
+              .. ". Channel: " .. channel
+              .. ". Port: " .. port)
+
+         play(t[i].note, t[i].duration, t[i].volume, channel, port)
       end
    end
 
@@ -95,10 +121,3 @@ return { parse_note = parse_note
        , set_tempo = set_tempo
        , go = go
 }
-
---[[
-return {
-   parse_note = parse_note,
-   play = play
-}
---]]

@@ -1,0 +1,7 @@
+-- We've always played notes at one constant volume. Design a notation for
+-- louder or quieter notes, and modify your music player to support it
+--
+-- If there's an error in the Lua script, the whole C++ program just exits without a word.
+-- Modify play.cpp to report any error information returned from the Lua iinterpreter.
+--
+-- cf: err_handle in play.cpp

@@ -1,0 +1,13 @@
+<!DOCTYPE patchbay>
+<patchbay version="0.3.12" name="patchbaytest">
+ <output-sockets>
+  <socket exclusive="off" client="zynaddsubfx" type="jack-audio" name="Output Socket 1">
+   <plug>out_1</plug>
+   <plug>out_2</plug>
+  </socket>
+ </output-sockets>
+ <input-sockets/>
+ <slots/>
+ <cables/>
+</patchbay>
+

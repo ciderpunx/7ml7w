@@ -13,3 +13,12 @@ d2
 * Don't like the fact that you have to define functions before you can use them (in the file)
 * The metatable stuff was hard until I had an insight that the global environment was a table and threfore creating a new table was just adding an element to a table. So I could the use __newindex metatable event to override default behaviour. cf: http://lua-users.org/wiki/MetatableEvents which also gave me a clue about rawset.
 * Don't like the self.xxx notation all that much; it makes my code a bit more cluttered than I'd like.
+
+d3
+
+installing on debian:
+$ sudo aptitude install build-essential liblua5.2-dev cmake librtmidi-dev
+
+how about: librtmidi1 librtmidi2?
+
+In debian the library is called lua5.2, needed to change cmake spec a little

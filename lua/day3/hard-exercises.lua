@@ -1,0 +1,1 @@
+-- The current implementation of play.cpp opens one global MIDI output port. Change it to allow the user to pass a port into midi_send so that you can control more than one device from the same script.

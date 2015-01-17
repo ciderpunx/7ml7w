@@ -1,4 +1,4 @@
-install problems:
+  install problems:
 
 sudo ln -s /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0 /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so
 sudo ln -s /usr/lib/libgtkglext-x11-1.0.so.0 /usr/lib/libgtkglext-x11-1.0.so

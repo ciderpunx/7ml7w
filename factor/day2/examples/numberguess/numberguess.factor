@@ -1,5 +1,5 @@
 USING: random sequences kernel math math.parser io ;
-IN: day2.examples.sequences
+IN: day2.examples.numberguess
 
 : win? ( num guess -- whl num guess ) 
     2dup = 

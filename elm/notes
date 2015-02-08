@@ -1,0 +1,22 @@
+Chapter by Bruce Tate
+
+Elm: functional reactive programming. haskell-like syntax. compiles down to js.
+You can write JS without all the fscking callbacks. At least that is the thery!
+
+Install thus:
+cabal update
+cabal install cabal-install
+cabal install -j elm-compiler-0.14.1 elm-package-0.4 elm-make-0.1.1
+cabal install -j elm-repl-0.4 elm-reactor-0.3
+
+Or, if already using Haskell fr other stuff use:
+https://github.com/elm-lang/elm-platform/blob/master/installers/BuildFromSource.hs#L1-L31
+
+I had to add force-reinstalls into the script before it'd build the sandbox.
+
+Then it couldn't find a file called interfaces.data, because it was looking in the wrong place, so I did some symlinking to make it happy:
+
+$ ln -s /usr/local/bin/Elm-Platform/0.13/share/x86_64-linux-ghc-7.6.3/Elm-0.13 /usr/local/bin/Elm-Platform/0.13/share/compiler
+
+Then I made a little REPL launcher bash script to sort out the path and that. 
+

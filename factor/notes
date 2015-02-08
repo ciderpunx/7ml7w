@@ -8,3 +8,5 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/libcairo.so.2 /usr/lib/x86_64-linux-gnu/lib
 sudo ln -s /usr/lib/x86_64-linux-gnu/libpangocairo-1.0.so.0 /usr/lib/x86_64-linux-gnu/libpangocairo-1.0.so
 sudo ln -s /usr/lib/x86_64-linux-gnu/libpango-1.0.so.0 /usr/lib/x86_64-linux-gnu/libpango-1.0.so
 sudo ln -s /usr/lib/libgdkglext-x11-1.0.so.0 /usr/lib/libgdkglext-x11-1.0.so
+
+f2 or refresh-all to reload current file is quite useful

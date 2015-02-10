@@ -11,7 +11,7 @@ addr = { street = "Cowley rd."
           }
 
 -- Nb all my people share the same address, cos I am lazy!
-people = 
+people =
   [ { name = "Edward Normalhands", age = 28,  address = addr }
   , { name = "Luke Landwalker",    age = 16,  address = addr }
   , { name = "Dave Vader",         age = 48,  address = addr }
@@ -19,11 +19,11 @@ people =
   , { name = "Pizza the Hutt",     age = 164, address = addr }
   ]
 
-oldies ps =  \
-  case ps of  \
-    []      -> [] \
-    p::ps'  -> if p.age > 16  \
-                  then p :: oldies ps' \
+oldies ps = 
+  case ps of 
+    []      -> []
+    p::ps'  -> if p.age > 16 
+                  then p :: oldies ps'
                   else oldies ps'
 
 -- or for a simpler implementation with currying you could

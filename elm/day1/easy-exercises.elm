@@ -32,12 +32,18 @@ person = { name    = "Edward Normalhands"
          , age     = 28
          , address = address
          }
+data Street    = Street String
+data Town      = Town String
+data County    = County String
+data Postcode  = Postcode String
+data Address   = Address Street Town County Postcode
 
-data Address = Address String String String String
-data Person  = Person String Int Address
+data Name          = Name String
+data Age           = Age Int
+data Person        = Person Name Age Address
 
-ad = Address "Cowley rd." "Oxford" "Oxon." "OX4 1DN"
-p  = Person "Edward Normalhands" 28 ad
+ad = Address (Street "Cowley rd.") (Town "Oxford") (County "Oxon.") (Postcode "OX4 1DN")
+p  = Person (Name "Edward Normalhands") (Age 28) ad
 
 -- Records or ADTs easier to aolve the problem
 -- Not that much in it.

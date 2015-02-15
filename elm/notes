@@ -20,3 +20,30 @@ $ ln -s /usr/local/bin/Elm-Platform/0.13/share/x86_64-linux-ghc-7.6.3/Elm-0.13 /
 
 Then I made a little REPL launcher bash script to sort out the path and that. 
 
+## Day 2
+
+First example won't work under elm 1.4; lift is no more and you need more imports
+
+So now we:
+import Signal (map)
+import Mouse
+import Text (asText)
+
+main = map asText Mouse.position
+
+count function is gone now, have to reimplement ourselves:
+
+import Graphics.Element (..)
+import Signal (Signal, map, foldp)
+import Mouse
+import Text (asText)
+
+
+main : Signal Element
+main =
+  map asText (count Mouse.position)
+  
+count = 
+  foldp (\click total -> total + 1) 0
+
+

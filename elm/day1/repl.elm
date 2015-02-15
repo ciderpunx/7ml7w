@@ -16,3 +16,7 @@
 -- 
 -- "just right" : String
 
+list1 = [1,2,3]
+
+-- case list1 of head::tail -> tail
+--               []         -> []

@@ -17,7 +17,6 @@ count =
   Signal.foldp (\click count -> count + 1) 0 (every second)
 
 up   = filled red (circle 24)
-
 down = filled red (circle 44)
 
 drawCircle : Int -> Int -> Bool -> Int -> Int -> Form
@@ -29,7 +28,6 @@ drawCircle w h d x y =
     False -> up
               |> moveX (normalizeX x w)
               |> moveY (normalizeY y h)
-
 
 normalizeX : Int -> Int -> Float
 normalizeX x w = 
@@ -44,7 +42,6 @@ minmax a d =
   if | a < 44    -> 44.0
      | a > d-44  -> toFloat (d - 44) 
      | otherwise -> toFloat a 
-
 
 show : (Int,Int) -> Bool -> (Int,Int) -> Element
 show (w,h) d (x,y) = collage w h 

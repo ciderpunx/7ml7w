@@ -1,3 +1,6 @@
 .*.swp
+.swp
 elm/build*
 elm/cache*
+elm/game/elm-stuff*
+*/elm-stuff*

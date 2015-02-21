@@ -1645,37 +1645,24 @@ Elm.LanguageHead.make = function (_elm) {
                                     ,_0: half(w) - 150
                                     ,_1: half(h) - 40})($Graphics$Collage.toForm(fullScore(player)));
    });
+   var minmaxPaddle = F2(function (x,
+   w) {
+      return _U.cmp(x,
+      50) < 0 ? 50.0 : _U.cmp(x,
+      w - 50) > 0 ? $Basics.toFloat(w - 50) : $Basics.toFloat(x);
+   });
    var drawPaddle = F3(function (w,
    h,
    x) {
-      return $Graphics$Collage.moveY(0 - (half(h) - 30))($Graphics$Collage.moveX(x + 10 - half(w))(A2($Graphics$Collage.filled,
+      return $Graphics$Collage.moveY(0 - (half(h) - 30))($Graphics$Collage.moveX(A2(minmaxPaddle,
+      x,
+      w) - $Basics.toFloat(w) / 2)(A2($Graphics$Collage.filled,
       $Color.black,
       A2($Graphics$Collage.rect,
       80,
       10))));
    });
-   var drawHead = F3(function (w,
-   h,
-   head) {
-      return function () {
-         var src = head.img;
-         var y = half(h) - head.y;
-         var x = half(w) - head.x;
-         return $Graphics$Collage.rotate($Basics.degrees(x * 2 - 100))($Graphics$Collage.move({ctor: "_Tuple2"
-                                                                                              ,_0: 0 - x
-                                                                                              ,_1: y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
-         75,
-         75,
-         src))));
-      }();
-   });
-   var drawHeads = F3(function (w,
-   h,
-   heads) {
-      return A2($List.map,
-      A2(drawHead,w,h),
-      heads);
-   });
+   var skullImg = "img/skull.png";
    var drawBuilding = F2(function (w,
    h) {
       return $Graphics$Collage.moveX(0 - half(w) + 50)($Graphics$Collage.toForm(A3($Graphics$Element.image,
@@ -1690,36 +1677,10 @@ Elm.LanguageHead.make = function (_elm) {
       160,
       "img/road.jpg")));
    });
-   var display = function (_v1) {
+   var xMoveFactor = 1;
+   var complete = function (_v1) {
       return function () {
-         return function () {
-            var $ = {ctor: "_Tuple2"
-                    ,_0: 800
-                    ,_1: 600},
-            w = $._0,
-            h = $._1;
-            return A3($Graphics$Collage.collage,
-            w,
-            h,
-            A2($Basics._op["++"],
-            _L.fromArray([A2(drawBuilding,
-                         w,
-                         h)
-                         ,A2(drawRoad,w,h)
-                         ,A3(drawPaddle,w,h,_v1.player.x)
-                         ,A3(drawScore,w,h,_v1.player)
-                         ,A3(drawMessage,
-                         w,
-                         h,
-                         _v1.state)]),
-            A3(drawHeads,w,h,_v1.heads)));
-         }();
-      }();
-   };
-   var xDivideBy = 0.5;
-   var complete = function (_v3) {
-      return function () {
-         return _U.cmp(_v3.x,750) > 0;
+         return _U.cmp(_v1.x,750) > 0;
       }();
    };
    var stepScore = F2(function (player,
@@ -1744,6 +1705,34 @@ Elm.LanguageHead.make = function (_elm) {
       heads);
    };
    var gravity = 0.95;
+   var diffHeadXs = function (hs) {
+      return function () {
+         switch (hs.ctor)
+         {case "::": switch (hs._1.ctor)
+              {case "::":
+                 return A2($List._op["::"],
+                   $Basics.abs(hs._0.x - hs._1._0.x),
+                   diffHeadXs(hs._1._1));
+                 case "[]":
+                 return _L.fromArray([]);}
+              break;
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 151 and 154");
+      }();
+   };
+   var biggestHeadDeltaLessThan = F2(function (n,
+   hs) {
+      return A2($List.all,
+      function (h) {
+         return _U.cmp(h,n) < 0;
+      },
+      diffHeadXs($List.reverse(hs)));
+   });
+   var gapBetweenHeads = 400.0;
+   var newHeadProbability = 0.5;
+   var maxConcurrentHeads = 3;
    var range = F2(function (x,y) {
       return $Signal.map(function (n) {
          return $Basics.fst(A2($Random.generate,
@@ -1755,15 +1744,15 @@ Elm.LanguageHead.make = function (_elm) {
    $Time.inSeconds,
    $Time.fps(50));
    var secsPerFrame = 1.0 / 50.0;
-   var moveHead = function (_v5) {
+   var moveHead = function (_v8) {
       return function () {
          return _U.replace([["x"
-                            ,_v5.x + _v5.vx * secsPerFrame / xDivideBy]
+                            ,_v8.x + _v8.vx * secsPerFrame / xMoveFactor]
                            ,["y"
-                            ,_v5.y + _v5.vy * secsPerFrame]
+                            ,_v8.y + _v8.vy * secsPerFrame]
                            ,["vy"
-                            ,_v5.vy + secsPerFrame * 400]],
-         _v5);
+                            ,_v8.vy + secsPerFrame * 400]],
+         _v8);
       }();
    };
    var moveHeads = F2(function (delta,
@@ -1797,6 +1786,76 @@ Elm.LanguageHead.make = function (_elm) {
       bounce,
       heads);
    };
+   var drawHead = F3(function (w,
+   h,
+   head) {
+      return function () {
+         var src = _U.cmp(head.y,
+         bottom - 10) > -1 ? skullImg : head.img;
+         var y = half(h) - head.y;
+         var x = half(w) - head.x;
+         return $Graphics$Collage.rotate($Basics.degrees(x * 2 - 100))($Graphics$Collage.move({ctor: "_Tuple2"
+                                                                                              ,_0: 0 - x
+                                                                                              ,_1: y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+         75,
+         75,
+         src))));
+      }();
+   });
+   var drawHeads = F3(function (w,
+   h,
+   heads) {
+      return A2($List.map,
+      A2(drawHead,w,h),
+      heads);
+   });
+   var display = function (_v10) {
+      return function () {
+         return function () {
+            var $ = {ctor: "_Tuple2"
+                    ,_0: 800
+                    ,_1: 600},
+            w = $._0,
+            h = $._1;
+            return A3($Graphics$Collage.collage,
+            w,
+            h,
+            A2($Basics._op["++"],
+            _L.fromArray([A2(drawBuilding,
+                         w,
+                         h)
+                         ,A2(drawRoad,w,h)
+                         ,A3(drawPaddle,
+                         w,
+                         h,
+                         _v10.player.x)
+                         ,A3(drawScore,w,h,_v10.player)
+                         ,A3(drawMessage,
+                         w,
+                         h,
+                         _v10.state)]),
+            A3(drawHeads,w,h,_v10.heads)));
+         }();
+      }();
+   };
+   _op["!!"] = F2(function (xs,n) {
+      return $List.head(A2($List.drop,
+      n,
+      xs));
+   });
+   var headList = _L.fromArray(["img/brucetate.png"
+                               ,"img/davethomas.png"
+                               ,"img/evanczaplicki.png"
+                               ,"img/joearmstrong.png"
+                               ,"img/josevalim.png"]);
+   var headListLen = $List.length(headList) - 1;
+   var headImage$ = function (n) {
+      return _U.cmp(n,
+      headListLen) > 0 || _U.cmp(n,
+      0) < 0 ? A2(_op["!!"],
+      headList,
+      1) : A2(_op["!!"],headList,n);
+   };
    var headImage = function (n) {
       return _U.eq(n,
       0) ? "./img/brucetate.png" : _U.eq(n,
@@ -1807,7 +1866,7 @@ Elm.LanguageHead.make = function (_elm) {
    };
    var defaultHead = function (n) {
       return {_: {}
-             ,img: headImage(n)
+             ,img: headImage$(n)
              ,vx: 60
              ,vy: 0.0
              ,x: 100.0
@@ -1817,23 +1876,38 @@ Elm.LanguageHead.make = function (_elm) {
    heads,
    rand) {
       return function () {
+         var gapOK = A2($List.all,
+         function (h) {
+            return _U.cmp(h.x,
+            gapBetweenHeads) > 0;
+         },
+         heads);
+         var divideScoreBy = (1 + rand) * 1000;
+         var $ = A2($Random.generate,
+         A2($Random.$float,0,1),
+         $Random.initialSeed(11 + rand * 36712)),
+         addProbability = $._0,
+         seed$ = $._1;
          var addHead = _U.cmp($List.length(heads),
-         (score / 5000 | 0) + 1) < 0 && A2($List.all,
+         (score / divideScoreBy | 0) + 1) < 0 && (A2($List.all,
          function (head) {
             return _U.cmp(head.x,
             107.0) > 0;
          },
-         heads);
+         heads) && (_U.cmp(addProbability,
+         newHeadProbability) > 0 && (_U.cmp($List.length(heads),
+         maxConcurrentHeads) < 0 && gapOK)));
          return addHead ? A2($List._op["::"],
          defaultHead(rand),
          heads) : heads;
       }();
    });
-   var stepHeads = F5(function (heads,
+   var stepHeads = F6(function (heads,
    delta,
    x,
    score,
-   rand) {
+   rand,
+   state) {
       return moveHeads(delta)(removeComplete(bounceHeads(A3(spawnHead,
       score,
       heads,
@@ -1848,11 +1922,13 @@ Elm.LanguageHead.make = function (_elm) {
    var Player = F2(function (a,b) {
       return {_: {},score: b,x: a};
    });
-   var Head = F4(function (a,
+   var Head = F5(function (a,
    b,
    c,
-   d) {
+   d,
+   e) {
       return {_: {}
+             ,img: e
              ,vx: c
              ,vy: d
              ,x: a
@@ -1880,7 +1956,7 @@ Elm.LanguageHead.make = function (_elm) {
    delta),
    A3(range,
    0,
-   4,
+   headListLen,
    $Time.every(secsPerFrame))));
    var GameOver = {ctor: "GameOver"};
    var Pause = {ctor: "Pause"};
@@ -1888,17 +1964,17 @@ Elm.LanguageHead.make = function (_elm) {
                      ,heads: _L.fromArray([])
                      ,player: {_: {},score: 0,x: 0.0}
                      ,state: Pause};
-   var stepGameFinished = F2(function (_v7,
-   _v8) {
+   var stepGameFinished = F2(function (_v12,
+   _v13) {
       return function () {
          return function () {
-            return _v7.space ? defaultGame : _U.replace([["state"
-                                                         ,GameOver]
-                                                        ,["player"
-                                                         ,_U.replace([["x"
-                                                                      ,$Basics.toFloat(_v7.x)]],
-                                                         _v8.player)]],
-            _v8);
+            return _v12.space ? defaultGame : _U.replace([["state"
+                                                          ,GameOver]
+                                                         ,["player"
+                                                          ,_U.replace([["x"
+                                                                       ,$Basics.toFloat(_v12.x)]],
+                                                          _v13.player)]],
+            _v13);
          }();
       }();
    });
@@ -1909,27 +1985,28 @@ Elm.LanguageHead.make = function (_elm) {
       $Basics.toFloat(x),
       heads) ? Play : GameOver;
    });
-   var stepGamePlay = F2(function (_v11,
-   _v12) {
+   var stepGamePlay = F2(function (_v16,
+   _v17) {
       return function () {
          return function () {
             return _U.replace([["state"
                                ,A2(stepGameOver,
-                               _v11.x,
-                               _v12.heads)]
+                               _v16.x,
+                               _v17.heads)]
                               ,["heads"
-                               ,A5(stepHeads,
-                               _v12.heads,
-                               _v11.delta,
-                               _v11.x,
-                               _v12.player.score,
-                               _v11.rand)]
+                               ,A6(stepHeads,
+                               _v17.heads,
+                               _v16.delta,
+                               _v16.x,
+                               _v17.player.score,
+                               _v16.rand,
+                               _v17.state)]
                               ,["player"
                                ,A3(stepPlayer,
-                               _v12.player,
-                               _v11.x,
-                               _v12.heads)]],
-            _v12);
+                               _v17.player,
+                               _v16.x,
+                               _v17.heads)]],
+            _v17);
          }();
       }();
    });
@@ -1937,27 +2014,27 @@ Elm.LanguageHead.make = function (_elm) {
    state) {
       return space ? Play : state;
    });
-   var stepGamePaused = F2(function (_v15,
-   _v16) {
+   var stepGamePaused = F2(function (_v20,
+   _v21) {
       return function () {
          return function () {
             return _U.replace([["state"
                                ,A2(stepState,
-                               _v15.space,
-                               _v16.state)]
+                               _v20.space,
+                               _v21.state)]
                               ,["player"
                                ,_U.replace([["x"
-                                            ,$Basics.toFloat(_v15.x)]],
-                               _v16.player)]],
-            _v16);
+                                            ,$Basics.toFloat(_v20.x)]],
+                               _v21.player)]],
+            _v21);
          }();
       }();
    });
    var stepGame = F2(function (input,
    game) {
       return function () {
-         var _v19 = game.state;
-         switch (_v19.ctor)
+         var _v24 = game.state;
+         switch (_v24.ctor)
          {case "GameOver":
             return A2(stepGameFinished,
               input,
@@ -1971,7 +2048,7 @@ Elm.LanguageHead.make = function (_elm) {
               input,
               game);}
          _U.badCase($moduleName,
-         "between lines 55 and 58");
+         "between lines 75 and 78");
       }();
    });
    var gameState = A3($Signal.foldp,
@@ -1992,6 +2069,9 @@ Elm.LanguageHead.make = function (_elm) {
                               ,defaultHead: defaultHead
                               ,defaultGame: defaultGame
                               ,headImage: headImage
+                              ,headList: headList
+                              ,headListLen: headListLen
+                              ,headImage$: headImage$
                               ,bottom: bottom
                               ,secsPerFrame: secsPerFrame
                               ,delta: delta
@@ -2005,14 +2085,19 @@ Elm.LanguageHead.make = function (_elm) {
                               ,allHeadsSafe: allHeadsSafe
                               ,headSafe: headSafe
                               ,stepHeads: stepHeads
+                              ,maxConcurrentHeads: maxConcurrentHeads
+                              ,newHeadProbability: newHeadProbability
                               ,spawnHead: spawnHead
+                              ,gapBetweenHeads: gapBetweenHeads
+                              ,biggestHeadDeltaLessThan: biggestHeadDeltaLessThan
+                              ,diffHeadXs: diffHeadXs
                               ,bounceHeads: bounceHeads
                               ,gravity: gravity
                               ,bounce: bounce
                               ,removeComplete: removeComplete
                               ,complete: complete
                               ,moveHeads: moveHeads
-                              ,xDivideBy: xDivideBy
+                              ,xMoveFactor: xMoveFactor
                               ,moveHead: moveHead
                               ,stepPlayer: stepPlayer
                               ,stepScore: stepScore
@@ -2023,8 +2108,10 @@ Elm.LanguageHead.make = function (_elm) {
                               ,drawRoad: drawRoad
                               ,drawBuilding: drawBuilding
                               ,drawHeads: drawHeads
+                              ,skullImg: skullImg
                               ,drawHead: drawHead
                               ,drawPaddle: drawPaddle
+                              ,minmaxPaddle: minmaxPaddle
                               ,half: half
                               ,quarter: quarter
                               ,drawScore: drawScore

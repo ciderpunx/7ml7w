@@ -178,6 +178,43 @@ Elm.Basics.make = function (_elm) {
                         ,curry: curry
                         ,uncurry: uncurry};
    return _elm.Basics.values;
+};Elm.Char = Elm.Char || {};
+Elm.Char.make = function (_elm) {
+   "use strict";
+   _elm.Char = _elm.Char || {};
+   if (_elm.Char.values)
+   return _elm.Char.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _P = _N.Ports.make(_elm),
+   $moduleName = "Char",
+   $Native$Char = Elm.Native.Char.make(_elm);
+   var fromCode = $Native$Char.fromCode;
+   var toCode = $Native$Char.toCode;
+   var toLocaleLower = $Native$Char.toLocaleLower;
+   var toLocaleUpper = $Native$Char.toLocaleUpper;
+   var toLower = $Native$Char.toLower;
+   var toUpper = $Native$Char.toUpper;
+   var isHexDigit = $Native$Char.isHexDigit;
+   var isOctDigit = $Native$Char.isOctDigit;
+   var isDigit = $Native$Char.isDigit;
+   var isLower = $Native$Char.isLower;
+   var isUpper = $Native$Char.isUpper;
+   _elm.Char.values = {_op: _op
+                      ,isUpper: isUpper
+                      ,isLower: isLower
+                      ,isDigit: isDigit
+                      ,isOctDigit: isOctDigit
+                      ,isHexDigit: isHexDigit
+                      ,toUpper: toUpper
+                      ,toLower: toLower
+                      ,toLocaleUpper: toLocaleUpper
+                      ,toLocaleLower: toLocaleLower
+                      ,toCode: toCode
+                      ,fromCode: fromCode};
+   return _elm.Char.values;
 };Elm.Color = Elm.Color || {};
 Elm.Color.make = function (_elm) {
    "use strict";
@@ -1593,6 +1630,7 @@ Elm.LanguageHead.make = function (_elm) {
    _P = _N.Ports.make(_elm),
    $moduleName = "LanguageHead",
    $Basics = Elm.Basics.make(_elm),
+   $Char = Elm.Char.make(_elm),
    $Color = Elm.Color.make(_elm),
    $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
    $Graphics$Element = Elm.Graphics.Element.make(_elm),
@@ -1609,7 +1647,7 @@ Elm.LanguageHead.make = function (_elm) {
          {case "GameOver":
             return "Game Over";
             case "Pause":
-            return "Press spacebar to start";}
+            return "Press space to start";}
          return "Language Head";
       }();
    };
@@ -1627,13 +1665,26 @@ Elm.LanguageHead.make = function (_elm) {
       $Text.height(50),
       stateMessage(state))));
    });
+   var fullBounces = function (player) {
+      return A2(txt,
+      $Text.height(50),
+      A2($Basics._op["++"],
+      "B:",
+      $Basics.toString(player.extraBounces)));
+   };
    var fullScore = function (player) {
       return A2(txt,
       $Text.height(50),
-      $Basics.toString(player.score));
+      A2($Basics._op["++"],
+      "S:",
+      $Basics.toString(player.score)));
    };
-   var quarter = function (x) {
-      return $Basics.toFloat(x) / 4;
+   var fullLives = function (player) {
+      return A2(txt,
+      $Text.height(50),
+      A2($Basics._op["++"],
+      "L:",
+      $Basics.toString(player.lives)));
    };
    var half = function (x) {
       return $Basics.toFloat(x) / 2;
@@ -1642,8 +1693,22 @@ Elm.LanguageHead.make = function (_elm) {
    h,
    player) {
       return $Graphics$Collage.move({ctor: "_Tuple2"
-                                    ,_0: half(w) - 150
+                                    ,_0: half(w) - 350
                                     ,_1: half(h) - 40})($Graphics$Collage.toForm(fullScore(player)));
+   });
+   var drawLives = F3(function (w,
+   h,
+   player) {
+      return $Graphics$Collage.move({ctor: "_Tuple2"
+                                    ,_0: half(w) - 50
+                                    ,_1: half(h) - 40})($Graphics$Collage.toForm(fullLives(player)));
+   });
+   var drawBounces = F3(function (w,
+   h,
+   player) {
+      return $Graphics$Collage.move({ctor: "_Tuple2"
+                                    ,_0: half(w) - 550
+                                    ,_1: half(h) - 40})($Graphics$Collage.toForm(fullBounces(player)));
    });
    var minmaxPaddle = F2(function (x,
    w) {
@@ -1677,6 +1742,26 @@ Elm.LanguageHead.make = function (_elm) {
       160,
       "img/road.jpg")));
    });
+   var perhapsAdd = F3(function (min,
+   n,
+   player) {
+      return _U.cmp(player.score,
+      min) > 0 && _U.eq(A2($Basics._op["%"],
+      player.score,
+      n),
+      0);
+   });
+   var stepExtraBounces = F2(function (player,
+   bpress) {
+      return function () {
+         var eb = bpress ? _U.cmp(player.extraBounces,
+         0) > 0 ? -1 : 0 : A3(perhapsAdd,
+         200,
+         200,
+         player) ? 1 : 0;
+         return player.extraBounces + eb;
+      }();
+   });
    var xMoveFactor = 1;
    var complete = function (_v1) {
       return function () {
@@ -1689,14 +1774,6 @@ Elm.LanguageHead.make = function (_elm) {
       complete,
       heads));
    });
-   var stepPlayer = F3(function (player,
-   mouseX,
-   heads) {
-      return _U.replace([["score"
-                         ,A2(stepScore,player,heads)]
-                        ,["x",$Basics.toFloat(mouseX)]],
-      player);
-   });
    var removeComplete = function (heads) {
       return A2($List.filter,
       function (x) {
@@ -1705,6 +1782,19 @@ Elm.LanguageHead.make = function (_elm) {
       heads);
    };
    var gravity = 0.95;
+   var extraHeadBounce = F3(function (bpress,
+   player,
+   heads) {
+      return bpress && _U.cmp(player.extraBounces,
+      0) > 0 ? A2($List.map,
+      function (h) {
+         return _U.replace([["vy"
+                            ,150.0]
+                           ,["y",100]],
+         h);
+      },
+      heads) : heads;
+   });
    var diffHeadXs = function (hs) {
       return function () {
          switch (hs.ctor)
@@ -1719,7 +1809,7 @@ Elm.LanguageHead.make = function (_elm) {
             case "[]":
             return _L.fromArray([]);}
          _U.badCase($moduleName,
-         "between lines 151 and 154");
+         "between lines 148 and 151");
       }();
    };
    var biggestHeadDeltaLessThan = F2(function (n,
@@ -1773,6 +1863,34 @@ Elm.LanguageHead.make = function (_elm) {
       return A2($List.all,
       headSafe(x),
       heads);
+   });
+   var stepLives = F3(function (player,
+   x,
+   heads) {
+      return A2(allHeadsSafe,
+      $Basics.toFloat(x),
+      heads) ? A3(perhapsAdd,
+      1000,
+      1000,
+      player) ? player.lives + 1 : player.lives : player.lives - 1;
+   });
+   var stepPlayer = F4(function (player,
+   mouseX,
+   bpress,
+   heads) {
+      return _U.replace([["score"
+                         ,A2(stepScore,player,heads)]
+                        ,["x",$Basics.toFloat(mouseX)]
+                        ,["lives"
+                         ,A3(stepLives,
+                         player,
+                         mouseX,
+                         heads)]
+                        ,["extraBounces"
+                         ,A2(stepExtraBounces,
+                         player,
+                         bpress)]],
+      player);
    });
    var bounce = function (head) {
       return _U.replace([["vy"
@@ -1830,6 +1948,8 @@ Elm.LanguageHead.make = function (_elm) {
                          h,
                          _v10.player.x)
                          ,A3(drawScore,w,h,_v10.player)
+                         ,A3(drawLives,w,h,_v10.player)
+                         ,A3(drawBounces,w,h,_v10.player)
                          ,A3(drawMessage,
                          w,
                          h,
@@ -1855,14 +1975,6 @@ Elm.LanguageHead.make = function (_elm) {
       0) < 0 ? A2(_op["!!"],
       headList,
       1) : A2(_op["!!"],headList,n);
-   };
-   var headImage = function (n) {
-      return _U.eq(n,
-      0) ? "./img/brucetate.png" : _U.eq(n,
-      1) ? "./img/davethomas.png" : _U.eq(n,
-      2) ? "./img/evanczaplicki.png" : _U.eq(n,
-      3) ? "./img/joearmstrong.png" : _U.eq(n,
-      4) ? "./img/josevalim.png" : "";
    };
    var defaultHead = function (n) {
       return {_: {}
@@ -1902,16 +2014,19 @@ Elm.LanguageHead.make = function (_elm) {
          heads) : heads;
       }();
    });
-   var stepHeads = F6(function (heads,
+   var stepHeads = F7(function (heads,
    delta,
    x,
-   score,
+   player,
    rand,
-   state) {
-      return moveHeads(delta)(removeComplete(bounceHeads(A3(spawnHead,
-      score,
+   state,
+   bpress) {
+      return moveHeads(delta)(removeComplete(A2(extraHeadBounce,
+      bpress,
+      player)(bounceHeads(A3(spawnHead,
+      player.score,
       heads,
-      rand))));
+      rand)))));
    });
    var Game = F3(function (a,b,c) {
       return {_: {}
@@ -1919,8 +2034,15 @@ Elm.LanguageHead.make = function (_elm) {
              ,player: c
              ,state: a};
    });
-   var Player = F2(function (a,b) {
-      return {_: {},score: b,x: a};
+   var Player = F4(function (a,
+   b,
+   c,
+   d) {
+      return {_: {}
+             ,extraBounces: d
+             ,lives: c
+             ,score: b
+             ,x: a};
    });
    var Head = F5(function (a,
    b,
@@ -1934,11 +2056,13 @@ Elm.LanguageHead.make = function (_elm) {
              ,x: a
              ,y: b};
    });
-   var Input = F4(function (a,
+   var Input = F5(function (a,
    b,
    c,
-   d) {
+   d,
+   e) {
       return {_: {}
+             ,bkey: e
              ,delta: c
              ,rand: d
              ,space: a
@@ -1946,6 +2070,7 @@ Elm.LanguageHead.make = function (_elm) {
    });
    var input = A2($Signal.sampleOn,
    delta,
+   A2($Signal._op["~"],
    A2($Signal._op["~"],
    A2($Signal._op["~"],
    A2($Signal._op["~"],
@@ -1957,12 +2082,17 @@ Elm.LanguageHead.make = function (_elm) {
    A3(range,
    0,
    headListLen,
-   $Time.every(secsPerFrame))));
+   $Time.every(secsPerFrame))),
+   $Keyboard.isDown($Char.toCode(_U.chr("b")))));
    var GameOver = {ctor: "GameOver"};
    var Pause = {ctor: "Pause"};
    var defaultGame = {_: {}
                      ,heads: _L.fromArray([])
-                     ,player: {_: {},score: 0,x: 0.0}
+                     ,player: {_: {}
+                              ,extraBounces: 0
+                              ,lives: 3
+                              ,score: 0
+                              ,x: 0.0}
                      ,state: Pause};
    var stepGameFinished = F2(function (_v12,
    _v13) {
@@ -1979,32 +2109,39 @@ Elm.LanguageHead.make = function (_elm) {
       }();
    });
    var Play = {ctor: "Play"};
-   var stepGameOver = F2(function (x,
-   heads) {
-      return A2(allHeadsSafe,
+   var stepGameOver = F3(function (x,
+   heads,
+   player) {
+      return _U.cmp(player.lives,
+      1) < 1 && $Basics.not(A2(allHeadsSafe,
       $Basics.toFloat(x),
-      heads) ? Play : GameOver;
+      heads)) ? GameOver : A2(allHeadsSafe,
+      $Basics.toFloat(x),
+      heads) ? Play : Pause;
    });
    var stepGamePlay = F2(function (_v16,
    _v17) {
       return function () {
          return function () {
             return _U.replace([["state"
-                               ,A2(stepGameOver,
+                               ,A3(stepGameOver,
                                _v16.x,
-                               _v17.heads)]
+                               _v17.heads,
+                               _v17.player)]
                               ,["heads"
-                               ,A6(stepHeads,
+                               ,A7(stepHeads,
                                _v17.heads,
                                _v16.delta,
                                _v16.x,
-                               _v17.player.score,
+                               _v17.player,
                                _v16.rand,
-                               _v17.state)]
+                               _v17.state,
+                               _v16.bkey)]
                               ,["player"
-                               ,A3(stepPlayer,
+                               ,A4(stepPlayer,
                                _v17.player,
                                _v16.x,
+                               _v16.bkey,
                                _v17.heads)]],
             _v17);
          }();
@@ -2018,23 +2155,38 @@ Elm.LanguageHead.make = function (_elm) {
    _v21) {
       return function () {
          return function () {
-            return _U.replace([["state"
-                               ,A2(stepState,
-                               _v20.space,
-                               _v21.state)]
-                              ,["player"
-                               ,_U.replace([["x"
-                                            ,$Basics.toFloat(_v20.x)]],
-                               _v21.player)]],
-            _v21);
+            return function () {
+               var state$ = A2(stepState,
+               _v20.space,
+               _v21.state);
+               return function () {
+                  switch (state$.ctor)
+                  {case "Play":
+                     return _U.replace([["state"
+                                        ,Play]
+                                       ,["player"
+                                        ,_U.replace([["x"
+                                                     ,$Basics.toFloat(_v20.x)]],
+                                        _v21.player)]
+                                       ,["heads",_L.fromArray([])]],
+                       _v21);}
+                  return _U.replace([["state"
+                                     ,state$]
+                                    ,["player"
+                                     ,_U.replace([["x"
+                                                  ,$Basics.toFloat(_v20.x)]],
+                                     _v21.player)]],
+                  _v21);
+               }();
+            }();
          }();
       }();
    });
    var stepGame = F2(function (input,
    game) {
       return function () {
-         var _v24 = game.state;
-         switch (_v24.ctor)
+         var _v25 = game.state;
+         switch (_v25.ctor)
          {case "GameOver":
             return A2(stepGameFinished,
               input,
@@ -2048,7 +2200,7 @@ Elm.LanguageHead.make = function (_elm) {
               input,
               game);}
          _U.badCase($moduleName,
-         "between lines 75 and 78");
+         "between lines 69 and 72");
       }();
    });
    var gameState = A3($Signal.foldp,
@@ -2068,7 +2220,6 @@ Elm.LanguageHead.make = function (_elm) {
                               ,Game: Game
                               ,defaultHead: defaultHead
                               ,defaultGame: defaultGame
-                              ,headImage: headImage
                               ,headList: headList
                               ,headListLen: headListLen
                               ,headImage$: headImage$
@@ -2091,6 +2242,7 @@ Elm.LanguageHead.make = function (_elm) {
                               ,gapBetweenHeads: gapBetweenHeads
                               ,biggestHeadDeltaLessThan: biggestHeadDeltaLessThan
                               ,diffHeadXs: diffHeadXs
+                              ,extraHeadBounce: extraHeadBounce
                               ,bounceHeads: bounceHeads
                               ,gravity: gravity
                               ,bounce: bounce
@@ -2100,6 +2252,9 @@ Elm.LanguageHead.make = function (_elm) {
                               ,xMoveFactor: xMoveFactor
                               ,moveHead: moveHead
                               ,stepPlayer: stepPlayer
+                              ,stepLives: stepLives
+                              ,perhapsAdd: perhapsAdd
+                              ,stepExtraBounces: stepExtraBounces
                               ,stepScore: stepScore
                               ,stepGamePaused: stepGamePaused
                               ,stepGameFinished: stepGameFinished
@@ -2113,9 +2268,12 @@ Elm.LanguageHead.make = function (_elm) {
                               ,drawPaddle: drawPaddle
                               ,minmaxPaddle: minmaxPaddle
                               ,half: half
-                              ,quarter: quarter
                               ,drawScore: drawScore
+                              ,drawLives: drawLives
+                              ,drawBounces: drawBounces
+                              ,fullLives: fullLives
                               ,fullScore: fullScore
+                              ,fullBounces: fullBounces
                               ,txt: txt
                               ,drawMessage: drawMessage
                               ,stateMessage: stateMessage};
@@ -2567,6 +2725,37 @@ Elm.Native.Basics.make = function(elm) {
   };
 
   return elm.Native.Basics.values = basics;
+};
+Elm.Native.Char = {};
+Elm.Native.Char.make = function(elm) {
+    elm.Native = elm.Native || {};
+    elm.Native.Char = elm.Native.Char || {};
+    if (elm.Native.Char.values) return elm.Native.Char.values;
+
+    var Utils = Elm.Native.Utils.make(elm);
+
+    function isBetween(lo,hi) { return function(chr) {
+	var c = chr.charCodeAt(0);
+	return lo <= c && c <= hi;
+    };
+                              }
+    var isDigit = isBetween('0'.charCodeAt(0),'9'.charCodeAt(0));
+    var chk1 = isBetween('a'.charCodeAt(0),'f'.charCodeAt(0));
+    var chk2 = isBetween('A'.charCodeAt(0),'F'.charCodeAt(0));
+
+    return elm.Native.Char.values = {
+        fromCode : function(c) { return String.fromCharCode(c); },
+        toCode   : function(c) { return c.toUpperCase().charCodeAt(0); },
+        toUpper  : function(c) { return Utils.chr(c.toUpperCase()); },
+        toLower  : function(c) { return Utils.chr(c.toLowerCase()); },
+        toLocaleUpper : function(c) { return Utils.chr(c.toLocaleUpperCase()); },
+        toLocaleLower : function(c) { return Utils.chr(c.toLocaleLowerCase()); },
+        isLower    : isBetween('a'.charCodeAt(0),'z'.charCodeAt(0)),
+        isUpper    : isBetween('A'.charCodeAt(0),'Z'.charCodeAt(0)),
+        isDigit    : isDigit,
+        isOctDigit : isBetween('0'.charCodeAt(0),'7'.charCodeAt(0)),
+        isHexDigit : function(c) { return isDigit(c) || chk1(c) || chk2(c); }
+    };
 };
 Elm.Native.Color = {};
 Elm.Native.Color.make = function(elm) {

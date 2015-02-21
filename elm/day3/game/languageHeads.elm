@@ -1,5 +1,6 @@
 module LanguageHead where
 
+import Char
 import Color (..)
 import Graphics.Collage (..)
 import Graphics.Element (image)
@@ -16,23 +17,15 @@ import Time(..)
 
 type State = Play | Pause | GameOver
 
-type alias Input = { space:Bool, x:Int, delta:Time, rand:Int }
+type alias Input = { space:Bool, x:Int, delta:Time, rand:Int, bkey:Bool }
 type alias Head = { x:Float, y:Float, vx:Float, vy:Float, img:String }
-type alias Player = { x:Float, score:Int }
+type alias Player = { x:Float, score:Int, lives:Int, extraBounces:Int }
 type alias Game = { state:State, heads:List Head, player:Player }
 
 defaultHead n = {x=100.0, y=75, vx=60, vy=0.0, img=headImage' n }
 defaultGame = { state   = Pause,
                 heads   = [],
-                player  = {x=0.0, score=0} }
-
-headImage n =
-  if | n == 0 -> "./img/brucetate.png"
-     | n == 1 -> "./img/davethomas.png"
-     | n == 2 -> "./img/evanczaplicki.png"
-     | n == 3 -> "./img/joearmstrong.png"
-     | n == 4 -> "./img/josevalim.png"
-     | otherwise -> ""
+                player  = {x=0.0, score=0, lives=3, extraBounces=0} }
 
 -- Make the game choose a random head from a list of graphics
 headList = [ "img/brucetate.png"
@@ -61,7 +54,8 @@ delta         = inSeconds <~ fps 50
 input = sampleOn delta (Input <~ Keyboard.space
                                ~ Mouse.x
                                ~ delta
-                               ~ (range 0 headListLen) (every secsPerFrame)  )
+                               ~ (range 0 headListLen) (every secsPerFrame)  
+                               ~ Keyboard.isDown (Char.toCode 'b') )
 
 -- Reintroduce the functionality of Random.range from 0.13
 range x y
@@ -77,15 +71,17 @@ stepGame input game =
     Pause    -> stepGamePaused input game
     GameOver -> stepGameFinished input game
 
-stepGamePlay {space, x, delta, rand} ({state, heads, player} as game) =
-  { game | state  <- stepGameOver x heads
-         , heads  <- stepHeads heads delta x player.score rand state
-         , player <- stepPlayer player x heads }
+stepGamePlay {space, x, delta, rand, bkey} ({state, heads, player} as game) =
+  { game | state  <- stepGameOver x heads player
+         , heads  <- stepHeads heads delta x player rand state bkey
+         , player <- stepPlayer player x bkey heads }
 
-stepGameOver x heads =
-  if allHeadsSafe (toFloat x) heads
-  then Play
-  else GameOver
+stepGameOver x heads player =
+  if (player.lives <= 1) && not (allHeadsSafe (toFloat x) heads)
+  then GameOver
+  else if (allHeadsSafe (toFloat x) heads)
+       then Play
+       else Pause
 
 allHeadsSafe x heads =
     all (headSafe x) heads
@@ -93,9 +89,10 @@ allHeadsSafe x heads =
 headSafe x head =
     head.y < bottom || abs (head.x - x) < 50
 
-stepHeads heads delta x score rand state =
-  spawnHead score heads rand
+stepHeads heads delta x player rand state bpress =
+  spawnHead player.score heads rand
     |> bounceHeads
+    |> extraHeadBounce bpress player
     |> removeComplete
     |> moveHeads delta
 
@@ -153,6 +150,11 @@ diffHeadXs hs =
     [h]          -> []
     h1::h2::tail -> abs (h1.x - h2.x) :: diffHeadXs tail
 
+extraHeadBounce bpress player heads =
+  if bpress && player.extraBounces > 0
+  then List.map (\h -> {h | vy <- 150.0, y <- 100 }) heads
+  else heads
+
 bounceHeads heads = 
   List.map bounce heads
 
@@ -174,7 +176,6 @@ complete {x} = x > 750
 moveHeads delta heads = 
   List.map moveHead heads
 
-
 -- Make heads bounce more times, reduce x movement
 -- Larger number reduces x movement, 1 is default
 xMoveFactor = 1
@@ -184,9 +185,41 @@ moveHead ({x, y, vx, vy} as head) =
          , y <- y + vy * secsPerFrame
          , vy <- vy + secsPerFrame * 400 }
 
-stepPlayer player mouseX heads =
+stepPlayer player mouseX bpress heads =
   { player | score <- stepScore player heads
-           , x <- toFloat mouseX }
+           , x <- toFloat mouseX 
+           , lives <- stepLives player mouseX heads
+           , extraBounces <- stepExtraBounces player bpress }
+
+
+-- Give the user 3 lives, add additional lives when the user hits
+-- a certain score
+stepLives player x heads =
+  if allHeadsSafe (toFloat x) heads
+  then if perhapsAdd 1000 1000 player 
+       then player.lives + 1 
+       else player.lives
+  else player.lives - 1
+
+-- Given a minium score at which to add something, 
+-- A step (i.e. every 1000 points scored) and a player
+-- Tell me if I should allow the player the extra
+perhapsAdd : Int -> Int -> Player -> Bool
+perhapsAdd min n player = 
+  player.score > min && (player.score % n) == 0
+
+-- Add other features that show up at different score increments.
+-- eg. bounce the heads up in the air wherever they are when the 
+-- user presses a key.
+stepExtraBounces player bpress =
+  let eb = if bpress
+           then if player.extraBounces > 0
+                then -1
+                else 0
+           else if perhapsAdd 200 200 player 
+                then 1 
+                else 0
+  in player.extraBounces + eb
 
 stepScore player heads =
   player.score +
@@ -194,8 +227,15 @@ stepScore player heads =
   1000 * (length (filter complete heads))
 
 stepGamePaused {space, x, delta} ({state, heads, player} as game) =
-  { game | state <- stepState space state
-         , player <- { player |  x <- toFloat x } }
+  let state' = stepState space state
+  in case state' of 
+    Play -> { game | state <- Play
+            , player <- { player |  x <- toFloat x }
+            , heads <- []
+            }
+    otherwise -> { game | state <- state' 
+                 , player <- { player |  x <- toFloat x } 
+                 }
 
 stepGameFinished {space, x, delta} ({state, heads, player} as game) =
   if space
@@ -215,6 +255,8 @@ display ({state, heads, player} as game) =
         , drawRoad w h
         , drawPaddle w h player.x
         , drawScore w h player
+        , drawLives w h player
+        , drawBounces w h player
         , drawMessage w h state
         ] ++ (drawHeads w h heads) )
 
@@ -255,17 +297,28 @@ minmaxPaddle x w =
      | x > w- 50 -> toFloat (w - 50)
      | otherwise -> toFloat x
 
-
 half x = toFloat x / 2
-
-quarter x = toFloat x / 4
 
 drawScore w h player =
   toForm (fullScore player)
-  |> move (half w - 150, half h - 40)
+  |> move (half w - 350, half h - 40)
+
+drawLives w h player =
+  toForm (fullLives player)
+  |> move (half w - 50, half h - 40)
+
+drawBounces w h player =
+  toForm (fullBounces player)
+  |> move (half w - 550, half h - 40)
+
+fullLives player = 
+  txt (Text.height 50) ("L:" ++ (toString player.lives))
 
 fullScore player = 
-  txt (Text.height 50) (toString player.score)
+  txt (Text.height 50) ("S:" ++ (toString player.score))
+
+fullBounces player = 
+  txt (Text.height 50) ("B:" ++ (toString player.extraBounces))
 
 txt f = 
   leftAligned << f << monospace << Text.color blue << fromString
@@ -279,6 +332,5 @@ drawMessage w h state =
 stateMessage state =
   case state of
     GameOver  -> "Game Over" 
-    Pause     -> "Press spacebar to start" 
+    Pause     -> "Press space to start" 
     otherwise -> "Language Head"
-

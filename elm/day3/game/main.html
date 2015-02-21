@@ -1632,19 +1632,11 @@ Elm.LanguageHead.make = function (_elm) {
       $Text.height(50),
       $Basics.toString(player.score));
    };
-   var drawSpaceMsg = F2(function (w,
-   h) {
-      return $Graphics$Collage.move({ctor: "_Tuple2"
-                                    ,_0: 50
-                                    ,_1: 30})($Graphics$Collage.toForm(A2(txt,
-      $Text.height(50),
-      "Press Spacebar to start")));
-   });
+   var quarter = function (x) {
+      return $Basics.toFloat(x) / 4;
+   };
    var half = function (x) {
       return $Basics.toFloat(x) / 2;
-   };
-   var mid = function (x) {
-      return $Basics.toFloat(x) - half(x);
    };
    var drawScore = F3(function (w,
    h,
@@ -1686,19 +1678,17 @@ Elm.LanguageHead.make = function (_elm) {
    });
    var drawBuilding = F2(function (w,
    h) {
-      return $Graphics$Collage.moveX(0 - half(w) + 50)(A2($Graphics$Collage.filled,
-      $Color.red,
-      A2($Graphics$Collage.rect,
-      100,
-      $Basics.toFloat(h))));
+      return $Graphics$Collage.moveX(0 - half(w) + 50)($Graphics$Collage.toForm(A3($Graphics$Element.image,
+      139,
+      600,
+      "img/tower-block.jpg")));
    });
    var drawRoad = F2(function (w,
    h) {
-      return $Graphics$Collage.moveY(0 - half(h) + 50)(A2($Graphics$Collage.filled,
-      $Color.gray,
-      A2($Graphics$Collage.rect,
-      $Basics.toFloat(w),
-      100)));
+      return $Graphics$Collage.moveY(0 - half(h) + 50)($Graphics$Collage.toForm(A3($Graphics$Element.image,
+      800,
+      160,
+      "img/road.jpg")));
    });
    var display = function (_v1) {
       return function () {
@@ -1712,8 +1702,10 @@ Elm.LanguageHead.make = function (_elm) {
             w,
             h,
             A2($Basics._op["++"],
-            _L.fromArray([A2(drawRoad,w,h)
-                         ,A2(drawBuilding,w,h)
+            _L.fromArray([A2(drawBuilding,
+                         w,
+                         h)
+                         ,A2(drawRoad,w,h)
                          ,A3(drawPaddle,w,h,_v1.player.x)
                          ,A3(drawScore,w,h,_v1.player)
                          ,A3(drawMessage,
@@ -1724,6 +1716,7 @@ Elm.LanguageHead.make = function (_elm) {
          }();
       }();
    };
+   var xDivideBy = 0.5;
    var complete = function (_v3) {
       return function () {
          return _U.cmp(_v3.x,750) > 0;
@@ -1750,6 +1743,7 @@ Elm.LanguageHead.make = function (_elm) {
       },
       heads);
    };
+   var gravity = 0.95;
    var range = F2(function (x,y) {
       return $Signal.map(function (n) {
          return $Basics.fst(A2($Random.generate,
@@ -1764,7 +1758,7 @@ Elm.LanguageHead.make = function (_elm) {
    var moveHead = function (_v5) {
       return function () {
          return _U.replace([["x"
-                            ,_v5.x + _v5.vx * secsPerFrame]
+                            ,_v5.x + _v5.vx * secsPerFrame / xDivideBy]
                            ,["y"
                             ,_v5.y + _v5.vy * secsPerFrame]
                            ,["vy"
@@ -1795,7 +1789,7 @@ Elm.LanguageHead.make = function (_elm) {
       return _U.replace([["vy"
                          ,_U.cmp(head.y,
                          bottom) > 0 && _U.cmp(head.vy,
-                         0) > 0 ? (0 - head.vy) * 0.95 : head.vy]],
+                         0) > 0 ? (0 - head.vy) * gravity : head.vy]],
       head);
    };
    var bounceHeads = function (heads) {
@@ -2013,10 +2007,12 @@ Elm.LanguageHead.make = function (_elm) {
                               ,stepHeads: stepHeads
                               ,spawnHead: spawnHead
                               ,bounceHeads: bounceHeads
+                              ,gravity: gravity
                               ,bounce: bounce
                               ,removeComplete: removeComplete
                               ,complete: complete
                               ,moveHeads: moveHeads
+                              ,xDivideBy: xDivideBy
                               ,moveHead: moveHead
                               ,stepPlayer: stepPlayer
                               ,stepScore: stepScore
@@ -2030,8 +2026,7 @@ Elm.LanguageHead.make = function (_elm) {
                               ,drawHead: drawHead
                               ,drawPaddle: drawPaddle
                               ,half: half
-                              ,mid: mid
-                              ,drawSpaceMsg: drawSpaceMsg
+                              ,quarter: quarter
                               ,drawScore: drawScore
                               ,fullScore: fullScore
                               ,txt: txt

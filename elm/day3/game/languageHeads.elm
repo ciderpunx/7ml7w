@@ -33,10 +33,10 @@ headImage n =
      | n == 3 -> "./img/joearmstrong.png"
      | n == 4 -> "./img/josevalim.png"
      | otherwise -> ""
-bottom = 550
 
-secsPerFrame = 1.0 / 50.0
-delta = inSeconds <~ fps 50
+bottom        = 550
+secsPerFrame  = 1.0 / 50.0
+delta         = inSeconds <~ fps 50
 
 input = sampleOn delta (Input <~ Keyboard.space
                                ~ Mouse.x
@@ -44,7 +44,7 @@ input = sampleOn delta (Input <~ Keyboard.space
                                ~ (range 0 4) (every secsPerFrame)  )
 
 -- Reintroduce the functionality of Random.range from 0.13
-range x y 
+range x y
   = map (\n -> fst (generate (int x y) (initialSeed (round n))))
 
 main = map display gameState
@@ -89,9 +89,13 @@ spawnHead score heads rand =
 bounceHeads heads = 
   List.map bounce heads
 
+-- Making heads bounce more times 
+-- We can use gravity to mean that heads bounce less high
+-- Default is 0.95
+gravity = 0.95
 bounce head =
   { head | vy <- if head.y > bottom && head.vy > 0
-                 then -head.vy * 0.95
+                 then -head.vy * gravity
                  else head.vy }
 
 removeComplete heads =
@@ -102,8 +106,13 @@ complete {x} = x > 750
 moveHeads delta heads = 
   List.map moveHead heads
 
+
+-- Make heads bounce more times, reduce x movement
+-- Larger number reduces x movement, 1 is default
+xMoveFactor = 1
+
 moveHead ({x, y, vx, vy} as head) =
-  { head | x <- x + vx * secsPerFrame
+  { head | x <- x + ((vx * secsPerFrame) / xDivideBy)
          , y <- y + vy * secsPerFrame
          , vy <- vy + secsPerFrame * 400 }
 
@@ -125,24 +134,29 @@ stepGameFinished {space, x, delta} ({state, heads, player} as game) =
   else { game | state <- GameOver
               , player <- { player |  x <- toFloat x } }
 
-stepState space state = if space then Play else state
+stepState space state = 
+  if space 
+  then Play 
+  else state
 
 display ({state, heads, player} as game) =
   let (w, h) = (800, 600)
   in collage w h
-       ([ drawRoad w h
-       , drawBuilding w h
-       , drawPaddle w h player.x
-       , drawScore w h player
-       , drawMessage w h state
-       ] ++ (drawHeads w h heads) )
+       ([ drawBuilding w h
+        , drawRoad w h
+        , drawPaddle w h player.x
+        , drawScore w h player
+        , drawMessage w h state
+        ] ++ (drawHeads w h heads) )
 
 drawRoad w h =
-  filled gray (rect (toFloat w) 100)
+  -- filled gray (rect (toFloat w) 100)
+  toForm (image 800 160 "img/road.jpg") 
   |> moveY (-(half h) + 50)
 
 drawBuilding w h =
-  filled red (rect 100 (toFloat h))
+  --filled red (rect 100 (toFloat h))
+  toForm (image 139 600 "img/tower-block.jpg") 
   |> moveX (-(half w) + 50)
 
 drawHeads w h heads = 
@@ -163,11 +177,7 @@ drawPaddle w h x =
 
 half x = toFloat x / 2
 
-mid x = toFloat x - half x
-
-drawSpaceMsg w h =
-  toForm (txt (Text.height 50) "Press Spacebar to start")
-    |> move (50,30)
+quarter x = toFloat x / 4
 
 drawScore w h player =
   toForm (fullScore player)
@@ -183,6 +193,8 @@ drawMessage w h state =
   toForm (txt (Text.height 50) (stateMessage state))
   |> move (50, 50)
 
+-- Added another state here for showing press spacebar when 
+-- game is in Paused state
 stateMessage state =
   case state of
     GameOver  -> "Game Over" 

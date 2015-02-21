@@ -1756,8 +1756,8 @@ Elm.LanguageHead.make = function (_elm) {
       return function () {
          var eb = bpress ? _U.cmp(player.extraBounces,
          0) > 0 ? -1 : 0 : A3(perhapsAdd,
-         200,
-         200,
+         1000,
+         2000,
          player) ? 1 : 0;
          return player.extraBounces + eb;
       }();

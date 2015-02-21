@@ -216,7 +216,7 @@ stepExtraBounces player bpress =
            then if player.extraBounces > 0
                 then -1
                 else 0
-           else if perhapsAdd 200 200 player 
+           else if perhapsAdd 1000 2000 player 
                 then 1 
                 else 0
   in player.extraBounces + eb

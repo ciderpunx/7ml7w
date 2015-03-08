@@ -1,0 +1,11 @@
+Joe Armstrong article: 
+http://joearms.github.io/2013/05/31/a-week-with-elixir.html
+
+Syntax gotchas: 
+
+You have to add a \ to the end of lines that break
+Doesn't like spaces between fn name and args def fn ():q
+^ doesn't mean exp.
+
+I like the -- syntax for removing items from lists (reads very like ++ )
+

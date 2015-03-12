@@ -5,3 +5,4 @@ elm/cache*
 elm-stuff*
 elm-package.json
 graphics*
+_build*

@@ -123,7 +123,6 @@ defmodule NoughtsAndCrosses do
         find(map(strategies, &(&1.(player,board))), nil, &(&1!=board))
     end
   end
-
 end
 
 testBoard = [ 'X', ' ', 'X' \

@@ -2,20 +2,22 @@ defmodule StateMachine do
   defmacro __using__(_) do
     quote do
       import StateMachine
+      import StateProtocol
+
       @states []
       @before_compile StateMachine
     end
   end
 
   defmacro state(nm, evts) do
-    # IO.puts "Declaring a state #{nm}"
     quote do
       @states [{unquote(nm), unquote(evts)} | @states]
     end
   end
 
   defmacro __before_compile__(env) do
-    states = Module.get_attribute(env.module, :states)
+    mod    = env.module
+    states = Module.get_attribute(mod, :states)
     events = states 
              |> Keyword.values
              |> List.flatten
@@ -23,24 +25,38 @@ defmodule StateMachine do
              |> Enum.uniq
 
     quote do
+
       def state_machine do
         unquote(states)
       end
 
-      unquote event_callbacks(events)
+      unquote event_callbacks(events,mod)
     end
   end
 
-  def event_callback(nm) do
+  def event_callback(nm,mod) do
     callback = nm
     quote do
       def unquote(nm)(ctx) do
-        StateMachine.Behaviour.fire(state_machine,ctx,unquote(callback))
+        StateProtocol.statey?(ctx)
+        ctx1 = hook(unquote(mod), unquote(nm),"before_",ctx) 
+        ctx2 = StateMachine.Behaviour.fire(state_machine,ctx1,unquote(callback))
+        ctx3 = hook(unquote(mod), unquote(nm),"after_",ctx2)
       end
     end
   end
 
-  def event_callbacks(nms) do
-    Enum.map nms, &event_callback/1
+  def hook(mod,nm,whn,ctx) do
+    func_name = whn <> to_string(nm)
+    func = String.to_atom(func_name)
+    if Kernel.function_exported?(mod, func, 1) do
+      apply(mod, func, [ctx])
+    else
+      ctx
+    end
+  end
+
+  def event_callbacks(nms,mod) do
+    Enum.map nms,  fn x -> event_callback(x,mod) end
   end
 end

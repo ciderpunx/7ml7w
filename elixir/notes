@@ -9,3 +9,6 @@ Doesn't like spaces between fn name and args def fn ():q
 
 I like the -- syntax for removing items from lists (reads very like ++ )
 
+Elixir cheatsheet
+http://media.pragprog.com/titles/elixir/ElixirCheat.pdf
+

@@ -37,23 +37,23 @@ julia> inv(invertible)
 
 > Create 2 dictionaries and merge them. Hint: Look up merge in the manual. 
 
-<p><code>julia> d1 = {:cider => 9, :beer => 7, :coffee => 8}
+<p><code>julia> d1 = {:cider =&gt; 9, :beer =&gt; 7, :coffee =&gt; 8}
 Dict{Any,Any} with 3 entries:
-  :beer   => 7
-  :coffee => 8
-  :cider  => 9
+  :beer   =&gt; 7
+  :coffee =&gt; 8
+  :cider  =&gt; 9
 
-julia> d2 = {:wine => 2, :baileys => -1}
+julia> d2 = {:wine =&gt; 2, :baileys =&gt; -1}
 Dict{Any,Any} with 2 entries:
-  :wine    => 2
-  :baileys => -1
+  :wine    =&gt; 2
+  :baileys =&gt; -1
 
 julia> merge(d1,d2)
 Dict{Any,Any} with 5 entries:
-  :beer    => 7 :coffee  => 8
-  :wine    => 2
-  :cider   => 9
-  :baileys => -1</code></p>
+  :beer    =&gt; 7 :coffee  =&gt; 8
+  :wine    =&gt; 2
+  :cider   =&gt; 9
+  :baileys =&gt; -1</code></p>
 
 > sort and sort! both operate on arrays. what is the difference between them?
 

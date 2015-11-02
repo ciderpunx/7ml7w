@@ -25,7 +25,7 @@ julia&gt; fac(25)
 
 > Add a method for concat that can concatenate an integer with a matrix &mdash; concat(5, [1 2; 3 4]) should produce [5 5 1 2; 5 5 3 4]
 
-That is a bit weird. I would have thought it would produce [5 1 2; 5 3 4], so I implemented it that way. I use the library function hcat once I have constructed a vercor of the correct dimension.
+That is a bit weird. I would have thought it would produce [5 1 2; 5 3 4], so I implemented it that way. I use the library function hcat once I have constructed a vertor of the correct dimension.
 
 <p><code>julia> q = [1 2 5; 2 2 2; 6 6 6]
 3x3 Array{Int64,2}:

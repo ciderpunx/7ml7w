@@ -48,7 +48,7 @@ julia&gt; for i in m
 
 > Use pmap to take an array of trial counts and produce the number of heads found for each element.
 
-I spent a really long time on this and could not find a sensible way to do it. Maybe it is just me, but this is a job for a fold/reduce rather than a map. I came up with something that works but not sure if it is what we are after.
+I spent a really long time on this and could not find a sensible way to do it. This seems very clearly a job for a fold/reduce rather than a map. I came up with something that "works" but not sure if it is what the authors were after.
 
 <p><code>julia&gt; heads=[1 0 1 1; 1 1 0 1; 1 0 0 1; 0 1 0 1]
 4x4 Array{Int64,2}:

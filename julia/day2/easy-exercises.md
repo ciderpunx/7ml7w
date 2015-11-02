@@ -1,6 +1,6 @@
-> Write a for loop that counts backward using Julia's range notation
+> Write a for loop that counts backward using Julia&#8217;s range notation.
 
-We can use the start:step:end notation like this
+We can use the start:step:end notation like this.
 
 <p><code>julia&gt; for i in 10:-1:1
            println(i)

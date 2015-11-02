@@ -1,6 +1,6 @@
 > Write the fatorial function as a parallel for loop
 
-Well, there is a much prettier way to do it that I realized earlier which is just
+Well, there is a much prettier way to do it that I realized earlier which is just.
 
 <p><code>julia&gt; *(1:5...)
 120</code></p><!--*-->

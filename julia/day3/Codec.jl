@@ -2,6 +2,58 @@ module Codec
 
 using Images
 
+function smaller_blockdct(img,n)
+  filter(x -> x>0, blockdct(img,n))
+end
+
+function smaller_blockidct(freqs,n)
+   block_width = 8
+   l,_=size(freqs)
+   for i in 1:l
+      # if freqs[i]%6==0
+      #   next block
+      # else
+      #   do some sort of thing to push it into this block
+      # end
+   end
+end
+
+function make_mask(width,n)
+  row_max = n
+  arr=zeros(width,width)
+  println(arr)
+  for i=1:row_max
+     for j=1:row_max
+        if(j<n-(i+1))
+          arr[i,j]=1
+        end
+     end
+  end
+  arr
+end
+
+function blockdct(img, n)
+  pixels = convert(Array{Float32}, img.data)
+  y,x = size(pixels)
+
+  outx = ifloor(x/8)
+  outy = ifloor(y/8)
+
+  bx = 1:8:outx*8
+  by = 1:8:outy*8
+
+  mask = make_mask(8,n)
+
+  freqs = Array(Float32, (outy*8,outx*8))
+
+  for i=bx, j=by
+    freqs[j:j+7, i:i+7] = dct(pixels[j:j+7, i:i+7])
+    freqs[j:j+7, i:i+7] .*= mask
+  end
+
+  freqs
+end
+
 function blockdct6(img)
   pixels = convert(Array{Float32}, img.data)
   y,x = size(pixels)
@@ -22,7 +74,7 @@ function blockdct6(img)
     freqs[j:j+7, i:i+7] .*= mask
   end
 
-  map(scaleupHighNumber, freqs)
+  freqs
 end
 
 function scaleupHighNumber(n)

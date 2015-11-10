@@ -53,6 +53,8 @@ function scaleupHighNumber(n)
   end
 end</code></p>
 
+<img src="//static.charlieharvey.org.uk/graphics/projects/text-blocky.jpg" class="bordered rightfloat" alt="text image blocky" />
+
 Adding noise makes the image look significantly blockier, here is how I did that.
 
 <p><code>

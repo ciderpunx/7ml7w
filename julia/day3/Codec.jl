@@ -1,6 +1,6 @@
 module Codec
 
-using Images
+using Images, Colors, ImageView
 
 function smaller_blockdct(img,n)
   sparse(blockdct(img,n))
@@ -23,30 +23,40 @@ function make_mask(width,n)
   arr
 end
 
-function blockdct(img, n)
-  pixels = convert(Array{Float32}, img.data)
-  y,x = size(pixels)
-
-  outx = ifloor(x/8)
-  outy = ifloor(y/8)
-
-  bx = 1:8:outx*8
-  by = 1:8:outy*8
-
-  mask = make_mask(8,n)
-
-  freqs = Array(Float32, (outy*8,outx*8))
-
-  for i=bx, j=by
-    freqs[j:j+7, i:i+7] = dct(pixels[j:j+7, i:i+7])
-    freqs[j:j+7, i:i+7] .*= mask
+function rgb_blockdct (img, n, bs)
+  freqs = convert(Array{Float32}, data(separate(img)))
+  y,x,cdim = size(freqs)
+  for i in 1:cdim
+    freqs[1:y,1:x,i]  = inner_blockdct(freqs[1:y,1:x,i],n,bs)
   end
-
   freqs
+end
+
+function rgb_blockidct (freqs, bs)
+  y,x,cdim = size(freqs)
+  for i in 1:cdim
+    freqs[1:y,1:x,i]  = blockidct(freqs[1:y,1:x,i],bs)
+  end
+  convert(Image{RGB}, freqs)
+  # colorim(freqs)
 end
 
 function blockdct(img, n, bs)
   pixels = convert(Array{Float32}, img.data)
+  inner_blockdct(pixels, n, bs)
+end
+
+function blockdct(img, n)
+  blockdct(img, n, 8)
+end
+
+function blockdct6(img)
+  blockdct(img, 6)
+end
+
+# this is the actual work part that calls dct (we crack out this part as it is called
+# per colo[u]r dimension for colo[u]r images
+function inner_blockdct(pixels, n, bs)
   y,x = size(pixels)
 
   outx = ifloor(x/bs)
@@ -67,37 +77,6 @@ function blockdct(img, n, bs)
   freqs
 end
 
-function blockdct6(img)
-  pixels = convert(Array{Float32}, img.data)
-  y,x = size(pixels)
-
-  outx = ifloor(x/8)
-  outy = ifloor(y/8)
-
-  bx = 1:8:outx*8
-  by = 1:8:outy*8
-
-  mask = zeros(8,8)
-  mask[1:3,1:3] = [1 1 1; 1 1 0; 1 0 0]  ## keep stuff marked 1, drop stuff that is 0
-
-  freqs = Array(Float32, (outy*8,outx*8))
-
-  for i=bx, j=by
-    freqs[j:j+7, i:i+7] = dct(pixels[j:j+7, i:i+7])
-    freqs[j:j+7, i:i+7] .*= mask
-  end
-
-  freqs
-end
-
-function scaleupHighNumber(n)
-  if n > 2
-    n * 144
-  else
-    n
-  end
-end
-
 function blockidct(freqs,bs)
   y,x = size(freqs)
   bx = 1:bs:x
@@ -107,19 +86,19 @@ function blockidct(freqs,bs)
   for i=bx, j=by
     pixels[j:j+bs-1, i:i+bs-1] = idct(freqs[j:j+bs-1, i:i+bs-1]) 
   end
-  grayim(pixels)
+  grayim(pixels) 
 end
 
 function blockidct(freqs)
-  y,x = size(freqs)
-  bx = 1:8:x
-  by = 1:8:y
+  blockidct(freqs,8)
+end
 
-  pixels = Array(Float32, size(freqs))
-  for i=bx, j=by
-    pixels[j:j+7, i:i+7] = idct(freqs[j:j+7, i:i+7]) ## ./ 255.0 not needed in later versions of julia
+function scaleupHighNumber(n)
+  if n > 2
+    n * 144
+  else
+    n
   end
-  grayim(pixels)
 end
 
 end # //module

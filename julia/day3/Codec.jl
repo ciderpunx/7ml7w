@@ -15,7 +15,7 @@ function make_mask(width,n)
   arr=zeros(width,width)
   for i=1:row_max
      for j=1:row_max
-        if(j&lt;n-(i+1))
+        if(j<n-(i+1))
           arr[i,j]=1
         end
      end
@@ -94,7 +94,7 @@ function blockidct(freqs)
 end
 
 function scaleupHighNumber(n)
-  if n &gt; 2
+  if n > 2
     n * 144
   else
     n

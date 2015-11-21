@@ -100,14 +100,13 @@ You can reverse the args of membero
 
 <p><code class="clojure">
 user=&gt; (run 5 [q] (membero [1 4 7] q))
-(([1 4 7] . _0) (_0 [1 4 7] . _1) (_0 _1 [1 4 7] . _2) (_0 _1 _2 [1 4 7] . _3) (_0 _1 _2 _3 [1 4 7] . _4))</code></p> <!--_-->
+(([1 4 7] . \_0) (\_0 [1 4 7] . \_1) (\_0 \_1 [1 4 7] . \_2) (\_0 \_1 \_2 [1 4 7] . \_3) (\_0 \_1 \_2 \_3 [1 4 7] . \_4))</code></p>
 
 What you are really asking here is which collections contain [1 4 7] as a member. The way to read this is . is head of a list \_0 is an unbound elt. So first answer is "any list with [1 4 7] as head". Next ans "Any list with [1 4 7] as second elt. And so on."
 
 ## Programming with facts
 
 Core.logic includes a database pldb which lets you construct relations a bit like a table in an sql db.
-
 
 <p><code class="clojure">user=&gt; (use 'clojure.core.logic.pldb)
 nil
@@ -122,16 +121,16 @@ user=&gt; (db-rel intersexo x)
 user=&gt; (db-rel genderqueero x)
 #'user/genderqueero
 user=&gt; (def facts
-  #_=&gt;   (db 
-  #_=&gt;     [mano :alan-turing]
-  #_=&gt;     [womano :grace-hopper]
-  #_=&gt;     [mano :leslie-lamport]
-  #_=&gt;     [transo :laverne-cox]
-  #_=&gt;     [womano :barbara-liskov]))
+  #\_=&gt;   (db 
+  #\_=&gt;     [mano :alan-turing]
+  #\_=&gt;     [womano :grace-hopper]
+  #\_=&gt;     [mano :leslie-lamport]
+  #\_=&gt;     [transo :laverne-cox]
+  #\_=&gt;     [womano :barbara-liskov]))
 [#object[clojure.lang.AFunction$1 0x27763e5f "clojure.lang.AFunction$1@27763e5f"] :laverne-cox][#object[clojure.lang.AFunction$1 0x1f4847ca "clojure.lang.AFunction$1@1f4847ca"] :barbara-liskov]#'user/facts
 user=&gt; (with-db facts
-  #_=&gt;   (run* [q] (womano q)))
-(:grace-hopper :barbara-liskov) </code></p> <!--_-->
+  #\_=&gt;   (run\* [q] (womano q)))
+(:grace-hopper :barbara-liskov) </code></p>
 
 So we created a some gender identity db relations then some people associated with the identities and then pulled out all the ones that we'd made womano.
 
@@ -142,20 +141,88 @@ Same trick with vitalo (alive/dead) and turingo (have won Turing award).
 user=&gt; (db-rel turingo p y)
 #'user/turingo
 user=&gt; (def facts
-  #_=&gt;   (-> facts
-  #_=&gt;     (db-fact vitalo :alan-turing :dead)
-  #_=&gt;     (db-fact vitalo :grace-hopper :dead)
-  #_=&gt;     (db-fact vitalo :leslie-lamport :alive)
-  #_=&gt;     (db-fact vitalo :laverne-cox :alive)
-  #_=&gt;     (db-fact vitalo :barbara-liskov :alive)
-  #_=&gt;     (db-fact turingo :barbara-liskov :2008)
-  #_=&gt;     (db-fact turingo :leslie-lamport :2013)
-  #_=&gt; ))
+  #\_=&gt;   (-> facts
+  #\_=&gt;     (db-fact vitalo :alan-turing :dead)
+  #\_=&gt;     (db-fact vitalo :grace-hopper :dead)
+  #\_=&gt;     (db-fact vitalo :leslie-lamport :alive)
+  #\_=&gt;     (db-fact vitalo :laverne-cox :alive)
+  #\_=&gt;     (db-fact vitalo :barbara-liskov :alive)
+  #\_=&gt;     (db-fact turingo :barbara-liskov :2008)
+  #\_=&gt;     (db-fact turingo :leslie-lamport :2013)
+  #\_=&gt; ))
 #'user/facts
 user=&gt; (with-db facts
-  #_=&gt;   (run* [q]
-  #_=&gt;     (womano q)
+  #\_=&gt;   (run\* [q]
+  #\_=&gt;     (womano q)
 (:barbara-liskov)
-  #_=>     (vitalo q :alive)))</code></p><!--_-->
+  #\_=&gt;     (vitalo q :alive)))</code></p>
 
+Use fresh to create new logic variables (which we bind to). That means we can find "Turing award winners that are alive". Because this is logic the order is not significant. Though the order of the list changed interestingly.
 
+<p><code class="clojure">
+user=> (with-db facts
+  #\_=>   (run\* [q]
+  #\_=>     (fresh [p y]
+  #\_=>     (vitalo p :alive)
+  #\_=>     (turingo p y)
+  #\_=>     (== q [p y]))))
+([:barbara-liskov :2008] [:leslie-lamport :2013])
+user=> (with-db facts
+  #\_=>   (run\* [q]
+  #\_=>     (fresh [p y]
+  #\_=>     (turingo p y)
+  #\_=>     (== q [p y])
+  #\_=>     (vitalo p :alive))))
+([:leslie-lamport :2013] [:barbara-liskov :2008])</code></p>
+
+## Parallel universes
+
+run, run\* and fresh succeed when all their goals succeed like && does. conde works like || -- it succeeds for each goal that succeeds independently in parallel (this isn't quite like or because it does not short circuit -- TODO think about the performance implications of this)
+
+<p><code class="clojure">user=&gt; (run\* [q]
+  #\_=&gt;     (conde
+  #\_=&gt;        [(== q 1)]
+  #\_=&gt;        [(== q 2) (== q 3)]
+  #\_=&gt;        [(== q :abc)]))
+(1 :abc)</code></p>
+
+## Dissecting a spell
+
+There's a thing called conso which is a bit like cons in Lisp -- but in the relational world so with head, tail and logic variable.
+
+<p><code class="clojure">user=&gt; (run\* [q] (conso :a [:b :c] q))
+((:a :b :c))
+user=&gt; (run\* [q] (conso :a q [:a :b :c]))
+((:b :c))
+user=&gt; (run\* [q] (fresh [h t] (conso h t [:a :b :c]) (== q [h t]))
+  #\_=&gt; )
+([:a (:b :c)])</code></p>
+
+Here is what the manual has to say of conso
+
+> A relation where l is a collection, such that a is the first of l and d is the rest of l. If ground d must be bound to a proper tail.
+
+I don&#8217;t know what <q>If ground d</q> means.
+
+Next we can use conso and conde to build insideo which works like membero. This is like a really unwieldy functional recursive style saying conde (which i have just realized is just like cond in Lisp!).
+
+* succeed if the head of the list is the same as the e which we pass in
+* call insideo on the tail of the list
+
+This is rather a long-winded syntax but it can do some cool things like work backwards and figure out what would be required for it to succeed.
+
+<p><code class="clojure">user=&gt; (defn insideo [e l]
+  #\_=&gt;    (conde 
+  #\_=&gt;      [(fresh [h t]
+  #\_=&gt;         (conso h t l)
+  #\_=&gt;         (== h e))]
+  #\_=&gt;      [(fresh [h t]
+  #\_=&gt;         (conso h t l)
+  #\_=&gt;         (insideo e t))]))
+#'user/insideo
+user=&gt; (run\* [q] (insideo q [:a :b :c]))
+(:a :b :c)
+user=&gt; (run 3 [q] (insideo :a q))
+((:a . \_0) (\_0 :a . \_1) (\_0 \_1 :a . \_2))
+user=&gt; (run\* [q] (insideo :d [:a :b :c q]))
+(:d)</code></p>

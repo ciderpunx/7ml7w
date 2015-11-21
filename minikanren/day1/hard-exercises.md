@@ -46,9 +46,30 @@ user=&gt; (def family
   #\_=&gt;     [childo :wilma-flintstone :pebbles-flintstone]))
 #'user/family</code></p>
 
+At this point I got stuck working out how to do recursion properly and had to content myself with doing some grandparent/grandchild relations.
+
+<p><code class="clojure">user=&gt; (defn grandparento [gc gp]
+  #\_=&gt;    (fresh [p]
+  #\_=&gt;      (parento gc p)
+  #\_=&gt;      (parento p gp)))
+#'user/grandparento
+user=&gt; (with-db family (run\* [q] (grandparento :bamm-bamm-rubble q)))
+()
+user=&gt; (with-db family (run\* [q] (grandparento :roxy-rubble q)))
+(:fred-flintstone :wilma-flintstone :betty-rubble :barney-rubble)
+user=&gt; (defn grandchildo [gp gc]
+  #\_=&gt;    (fresh [c]
+  #\_=&gt;      (parento c gc)
+  #\_=&gt;      (parento gp c)))
+#'user/grandchildo
+user=&gt; (with-db family (run\* [q] (grandchildo q :fred-flintstone)))
+(:chip-rubble :roxy-rubble)
+user=&gt; (with-db family (run\* [q] (grandparento q :fred-flintstone)))
+(:chip-rubble :roxy-rubble)</code></p>
+
 > Write a relation called *extendo*, which works like the bult-in *appendo*, mentioned in the easy problems.
 
-I am pretty sure this is right. Let me know in the comments if not!
+I am pretty sure this is right and I found it a shitload easier to write than the ancestor stuff. Let me know in the comments if it is wrong somehow.
 
 <p><code class="clojure">user=&gt; (defn extendo [a b l]
   #\_=&gt;   (conde
@@ -65,4 +86,3 @@ user=&gt; (run\* [q] (extendo [1 2] q [1 2 3 4]))
 ((3 4))
 user=&gt; (run\* [q] (extendo q [3 4] [1 2 3 4]))
 ((1 2))</code></p>
-

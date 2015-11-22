@@ -1,6 +1,8 @@
+#### Hard exercises
+
 > Create a genealogy system using a family tree database and relations like *childo* and *spouseo*. Then write functions that can traverse the tree like *ancestro*, *descendanto*, and *cousino*.
 
-Creating the database for this was boring work. I am not sure that I need both parent and child relationships. Well, whatever.
+Creating the database for this was boring work. As you can see I created some redundant relationships. Child is just parent back to front after all.
 
 <p><code class="clojure">user=&gt; (db-rel childo p c)
 #'user/childo

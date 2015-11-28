@@ -117,4 +117,61 @@ user=> (run* [q] (whicho :d [:a :b :c] [:d :e :c] q))
 (:two)
 user=> (run* [q] (whicho :c [:a :b :c] [:d :e :c] q))
 (:one :two :both)
-<!--_--></code></p>
+<!--*--></code></p>
+
+In cases like this we can use conda, note code reorganized to short circuit like a given when in perl 6.
+
+<p><code class="clojure">
+(defn whicho [x s1 s2 r]
+  (conda
+    [(all
+      (membero x s1)
+      (membero x s2)
+      (== r :both))]
+    [(all
+      (membero x s1)
+      (== r :one))]
+    [(all
+      (membero x s2)
+      (== r :two))]))
+</code></p>
+
+Now things work like we wanted &mdash; a shortcircuiting if statement like in a proper language. In logic programming the conde form is more common though.
+
+<p><code class="clojure">
+user=> (run* [q] (whicho :a [:a :b :c] [:d :e :c] q))
+(:one)
+user=> (run* [q] (whicho :d [:a :b :c] [:d :e :c] q))
+(:two)
+user=> (run* [q] (whicho :c [:a :b :c] [:d :e :c] q))
+(:both)
+<!--*--></code></p>
+
+### Single solution: condu
+
+condu stops completely once a single solution is found. So for example using insodeo instead of finding that:
+
+<p><code class="clojure">
+user=> (run* [q] (insideo q [:a :b :c :d]))
+(:a :b :c :d)
+<!--*--></code></p>
+
+We get that
+
+<p><code class="clojure">
+user=> (run* [q] (insideo q [:a :b :c :d]))
+(:a)
+<!--*--></code></p>
+
+The first match rather than all matches (the committed choice macro is the proper name for it). Here is how that version of insideo is implemented
+
+<p><code class="clojure">
+  (defn insideo [e l]
+  (condu
+    [(fresh [h t]
+      (conso h t l)
+      (== h e))]
+    [(fresh [h t]
+      (conso h t l)
+      (insideo e t))]))
+</code></p>
